@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState } from 'react'
+import axios from 'axios'
 import {
   CButton,
   CCard,
@@ -12,42 +11,51 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
-} from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilUser } from '@coreui/icons';
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilLockLocked, cilUser } from '@coreui/icons'
 
 const Register = () => {
-
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
     email: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+    password: '',
+    repeatPassword: '',
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      console.log("test1");
-      const response = await axios.post('http://localhost:3000/signup', formData, { withCredentials: true });
-      const { token } = response.data;
-      localStorage.setItem('token', token);
-      navigate('/prescription');
-    } catch (err) {
-      console.log(err);
-      setError(err.response?.data?.error || 'Registration failed');
-    } finally {
-      setLoading(false);
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    if (formData.password !== formData.repeatPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
     }
-  };
+
+    try {
+      const response = await axios.post('http://localhost:8081/signup', {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        password: formData.password,
+      })
+      localStorage.setItem('token', response.data.token)
+      window.location.href = '/prescription'
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
@@ -101,9 +109,39 @@ const Register = () => {
                       disabled={loading}
                     />
                   </CInputGroup>
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      placeholder="Password"
+                      autoComplete="new-password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                    />
+                  </CInputGroup>
+                  <CInputGroup className="mb-4">
+                    <CInputGroupText>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      placeholder="Repeat password"
+                      autoComplete="new-password"
+                      name="repeatPassword"
+                      value={formData.repeatPassword}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                    />
+                  </CInputGroup>
                   <div className="d-grid">
                     <CButton color="success" type="submit" disabled={loading}>
-                      {loading ? 'Signing up...' : 'Create Account'}
+                      {loading ? 'Creating...' : 'Create Account'}
                     </CButton>
                   </div>
                 </CForm>
@@ -113,7 +151,7 @@ const Register = () => {
         </CRow>
       </CContainer>
     </div>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register

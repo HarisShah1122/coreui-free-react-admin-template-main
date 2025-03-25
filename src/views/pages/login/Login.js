@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   CButton,
@@ -18,23 +18,32 @@ import CIcon from '@coreui/icons-react';
 import { cilLockLocked, cilUser } from '@coreui/icons';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      console.log(err);
-      const response = await axios.post('http://localhost:3000/login', { email });
-      const { token } = response.data;
-      localStorage.setItem('token', token);
-      navigate('/prescription');
+      const response = await axios.post('http://localhost:8081/login', {
+        email: formData.email.trim(),
+        password: formData.password.trim()
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      localStorage.setItem('token', response.data.token);
+      window.location.href = '/prescription';
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -60,8 +69,24 @@ const Login = () => {
                       <CFormInput
                         placeholder="Email"
                         autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                      />
+                    </CInputGroup>
+                    <CInputGroup className="mb-4">
+                      <CInputGroupText>
+                        <CIcon icon={cilLockLocked} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="password"
+                        placeholder="Password"
+                        autoComplete="current-password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
                         required
                         disabled={loading}
                       />
